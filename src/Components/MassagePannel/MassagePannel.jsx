@@ -7,7 +7,7 @@ export default class MassagePannel extends Component {
     render() {
         return (
             <>
-            <MassageHeader/>
+            <MassageHeader />
             <MassageBody userName={this.props.userName} group={this.props.group}/>
             </>
         )

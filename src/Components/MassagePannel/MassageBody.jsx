@@ -1,5 +1,5 @@
 import React, { Component } from 'react'
-import { Segment,Input, Button,Comment } from 'semantic-ui-react'
+import { Segment,Input, Button,Comment, Image } from 'semantic-ui-react'
 import {getDatabase, ref, push, set,child, onChildAdded, onChildChanged} from '../../Firebase'
 import ImageModel from './ImageModel'
 import moment from 'moment'
@@ -7,7 +7,8 @@ export default class MassageBody extends Component {
     state = {
         modal: false,
         massage: '',
-        textMassage:[]
+        textMassage:[],
+        uploadingFile: []
     }
 
 
@@ -55,12 +56,14 @@ export default class MassageBody extends Component {
        }      
     }
     
+
+   
     //Show RealTime Data in Our window..
     componentDidUpdate(prevProps){
         const {group} = this.props
 
+    // ========For Massage========
         let massageArray = []
-
         const db = getDatabase()
         const massageRef = ref(db, 'massage/' );
 
@@ -68,18 +71,14 @@ export default class MassageBody extends Component {
            
             data.forEach((item)=>{
                 massageArray.push(item.val())
-          
             })
-
-            if(prevProps.group){
-               
+            if(prevProps.group){          
                 if(prevProps.group.groupName !== group.groupName){
                     this.setState({textMassage:massageArray})
                 }
             }else{
                 this.setState({textMassage:massageArray})
             }
-           
         });
 
         onChildChanged(massageRef, (data) => {
@@ -96,10 +95,42 @@ export default class MassageBody extends Component {
                 this.setState({textMassage:massageArray})
             } 
         });
+
+        // ========For Files======
+        let filesArray = []
+        const fileRef = ref(db, 'files/' );
+
+        onChildAdded(fileRef, (data) => {
+            data.forEach((item)=>{
+                filesArray.push(item.val())
+            })
+            if(prevProps.group){          
+                if(prevProps.group.groupName !== group.groupName){
+                    this.setState({uploadingFile:filesArray})
+                }
+            }else{
+                this.setState({uploadingFile:filesArray})
+            }
+        });
+
+        onChildChanged(fileRef, (data) => {
+            filesArray = []
+            data.forEach((item)=>{
+                filesArray.push(item.val())
+            })
+            if(prevProps.group){
+                if(prevProps.group.groupName !== group.groupName){
+                    this.setState({uploadingFile:filesArray})
+                }
+            }else{
+                this.setState({uploadingFile:filesArray})
+            } 
+        });
+
     }
    
     render() {
-        const {massage,textMassage,modal} = this.state
+        const {massage,textMassage,modal,uploadingFile} = this.state
         const {userName,group} = this.props
         return (
             <>
@@ -116,6 +147,29 @@ export default class MassageBody extends Component {
                                 </Comment.Metadata>
                                 <Comment.Text style={userName.uid == item.sender? design:notDesign}>
                                     {item.outputMassage}
+                                </Comment.Text>
+                            </Comment.Content>
+                            </Comment>
+                        </div>  
+                    </div>   
+                    :
+                    ''
+                ))}
+
+
+                {/* ========For File======== */}
+                {uploadingFile.map((item)=>(
+                    item.groupName == group.id?
+                    <div>
+                       <div style={userName.uid == item.sender? right:left}>
+                           <Comment>
+                            <Comment.Content>
+                                <Comment.Author as='a'>{item.username}</Comment.Author>
+                                <Comment.Metadata>
+                                <span>{moment(item.date).fromNow()}</span>
+                                </Comment.Metadata>
+                                <Comment.Text style={userName.uid == item.sender? FileDesign:NotFileDesign}>
+                                <Image src={item.filesUrl} size='small' />
                                 </Comment.Text>
                             </Comment.Content>
                             </Comment>
@@ -143,7 +197,7 @@ export default class MassageBody extends Component {
 
                 {/* MODEL BUTTON START */}
                 <Button icon='add' circular color='twitter' onClick={this.openModal}></Button>
-                <ImageModel modal={modal} close={this.closeModal}/>
+                <ImageModel userName={userName} group={group} modal={modal} close={this.closeModal}/>
                 {/* MODEL BUTTON END */}
                 </span>
             </Segment>
@@ -180,4 +234,11 @@ const notDesign = {
     display:'inline-block',
     padding:'5px 15px',
     borderRadius:'5px',
+}
+
+const FileDesign = {
+    display:'inline-block' 
+}
+const NotFileDesign = {
+    display:'inline-block'
 }

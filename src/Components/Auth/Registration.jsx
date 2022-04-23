@@ -96,7 +96,7 @@ export default class Registration extends React.Component{
         
                    <h1>Hello Everyone , We are Chitchat</h1>
                    <p>Welcome to chitchat, please Register to your account.</p>
-
+                   
                    {ErrorMsg?<Message error header={ErrorMsg}/>:''}
                    {SuccessMsg?<Message success header={SuccessMsg}/>:''}                    
                    
